@@ -14,4 +14,6 @@ module.exports = app => {
     app.put("/api/gamers/:gamer_id", GamerController.updateGamer);
     // DELETE GAMER
     app.delete("/api/gamers/:gamer_id", GamerController.deleteGamer)
+    // REGISTER GAMER
+    app.post("/api/gamers/register", GamerController.register)
 }

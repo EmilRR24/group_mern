@@ -1,4 +1,5 @@
 const mongoose = require("mongoose")
+const bcrypt = require("bcrypt")
 
 const GamerSchema = mongoose.Schema({
     first_name:{
@@ -15,21 +16,22 @@ const GamerSchema = mongoose.Schema({
     },
     email: {
       type: String,
-      match: [
-        /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-        'Please add a valid email address.',
-      ],
-      required: [true, 'Please enter Email Address'],
+      required: [true, "Email is required"],
       unique: [true, "EMAIL ALREADY EXISTS!"],
       lowercase: true,
-      dropDups: true
-    },
+      dropDups: true,
+      // VALIDATES FOR EMAIL REGEX
+      validate: {
+          validator: val => /^([\w-\.]+@([\w-]+\.)+[\w-]+)?$/.test(val),
+          message: "Please enter a valid email"
+      }
+  },
     user_name: {
-      type: String, 
-      required: [true, "REQUIRES A USER NAME!"],
-      minLength:[2, "User Name must be at least 2 characters!"],
-      maxLength:[30, "User Name can be at most 30 characters!"],
-      unique: [true, "USER NAME ALREADY EXISTS!"],
+      type: String
+      // required: [true, "REQUIRES A USER NAME!"],
+      // minLength:[2, "User Name must be at least 2 characters!"],
+      // maxLength:[30, "User Name can be at most 30 characters!"],
+      // unique: [true, "USER NAME ALREADY EXISTS!"]
     },
     password: {
       type: String, //BCRYPT
@@ -43,4 +45,29 @@ const GamerSchema = mongoose.Schema({
 
 }, {timestamps:true})
 
-module.exports.Gamer = mongoose.model("Gamer", GamerSchema)
+// CREATE A TEMPORARY CONFIRM PASSWORD ATTRIBUTE IN OUR SCHEMA
+GamerSchema.virtual('confirmPassword')
+  .get( () => this._confirmPassword )
+  .set( value => this._confirmPassword = value );
+
+// CREATE VALIDATIONS FOR THE CONFIRM PASSWORD
+GamerSchema.pre("validate", function(next){
+  if(this.password !== this.confirmPassword){
+      this.invalidate("confirmPassword", "Password and confirm password must match")
+  }
+  next()
+})
+
+// BEFORE SAVING THE USER, SWAP OUT PASSWORD WITH HASHED PASSWORD
+GamerSchema.pre("save", function(next){
+  bcrypt.hash(this.password, 10)
+      .then(hashedPassword => {
+          this.password = hashedPassword
+          next()
+      })
+})
+
+
+
+
+  module.exports.Gamer = mongoose.model("Gamer", GamerSchema)

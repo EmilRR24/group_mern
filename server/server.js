@@ -11,7 +11,7 @@ require("./config/mongoose.config")
 
 
 // 2. CONFIGURE YOUR EXPRESS
-app.use(cors()) // ALLOWS FOR REACT/EXPRESS TO COMMUNICATE
+app.use(cors({credentials:true , origin:"http://localhost:3000"})) // ALLOWS FOR REACT/EXPRESS TO COMMUNICATE
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 
